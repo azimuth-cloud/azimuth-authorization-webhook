@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-    authorizationv1 "k8s.io/api/authorization/v1"
 	"encoding/json"
+	"flag"
+	"fmt"
+	authorizationv1 "k8s.io/api/authorization/v1"
+	"net/http"
 	"os"
 	"slices"
-	"flag"
 	"strings"
 )
 
-var readonlyVerbs = []string {"get", "list", "watch", "proxy"}
+var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
-func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) func(w http.ResponseWriter, r *http.Request){
-	return func(w http.ResponseWriter, r *http.Request){
+func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var sar authorizationv1.SubjectAccessReview
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
@@ -24,9 +24,9 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) fu
 		defer r.Body.Close()
 		isUnprivilegedUser := slices.Contains(sar.Spec.Groups, unprivilegedGroup)
 		isProtectedNamespace := slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace) // TODO: test if you can bypass with empty or all namespaces
-		isSecret := sar.Spec.ResourceAttributes.Resource == "secrets" //TODO: test if you can bypass with * or singular nouns
+		isSecret := sar.Spec.ResourceAttributes.Resource == "secrets"                                       //TODO: test if you can bypass with * or singular nouns
 		isReadonlyVerb := slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
-		
+
 		status := new(authorizationv1.SubjectAccessReviewStatus)
 		if isUnprivilegedUser && isProtectedNamespace && isSecret {
 			status.Allowed = false
@@ -52,12 +52,12 @@ func main() {
 	var protectedNamespacesCSL = flag.String("protected-namespaces", "kube-system,openstack-system", "Comma separated list of namespaces which unprivileged users will have limited permissions for")
 	flag.Parse()
 
-	protectedNamespaces := strings.Split(*protectedNamespacesCSL,",")
+	protectedNamespaces := strings.Split(*protectedNamespacesCSL, ",")
 
-	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces,*unprivelegedGroup))
+	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, *unprivelegedGroup))
 	fmt.Printf("Server started\n")
 	err := http.ListenAndServe(":8080", nil)
-	if (err != nil) { 
+	if err != nil {
 		fmt.Printf("error starting server: %s\n", err)
 		os.Exit(1)
 	}
