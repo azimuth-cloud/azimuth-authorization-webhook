@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"slices"
 	"strings"
@@ -15,13 +18,29 @@ var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
 func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		fmt.Printf("Request received from %s\n:", r.RemoteAddr)
+		
+		// Read and recreate body after it's consumed by dump
+		bodyBytes, _ := io.ReadAll(r.Body)
+		defer r.Body.Close()
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+		// Print dump for logging
+		dump, dumperr := httputil.DumpRequest(r, true)
+		if dumperr != nil {
+			fmt.Println("Error dumping request:", dumperr)
+			return
+		}
+		fmt.Println(string(dump))
+
 		var sar authorizationv1.SubjectAccessReview
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
-		defer r.Body.Close()
+
 		isUnprivilegedUser := slices.Contains(sar.Spec.Groups, unprivilegedGroup)
 		isProtectedNamespace := slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace) // TODO: test if you can bypass with empty or all namespaces
 		isSecret := sar.Spec.ResourceAttributes.Resource == "secrets"                                       //TODO: test if you can bypass with * or singular nouns
