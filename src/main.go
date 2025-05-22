@@ -35,7 +35,7 @@ type SubjectAccessReviewSpecAPI struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
-func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,logLevel int) func(w http.ResponseWriter, r *http.Request) {
+func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,opinionMode bool,logLevel int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if(logLevel >= 2) { fmt.Printf("Request received from %s\n:", r.RemoteAddr) }
@@ -65,22 +65,23 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,log
 		isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
 
 		status := new(authorizationv1.SubjectAccessReviewStatus)
+		status.Allowed = false
 		if isUnprivilegedUser && isProtectedNamespace && isSecret {
-			status.Allowed = false
+			status.Denied = true
 			status.Reason = "Cannot access secrets in protected namespace"
 		} else if isUnprivilegedUser && isProtectedNamespace && !isReadonlyVerb {
-			status.Allowed = false
+			status.Denied = true
 			status.Reason = "Cannot write to protected namespace"
 		} else {
-			status.Allowed = true
-			status.Reason = ""
+			status.Allowed = opinionMode
+			if(!opinionMode){ status.Reason = "Webhook doesn't give opinion, delegated to other authorizers" }
 		}
 		//todo: add status.EvaluationError handling
 
 		sar.Status = *status
 
-		if(!status.Allowed && logLevel == 1) { fmt.Println(string(dump)) }
-		if(!status.Allowed && logLevel >= 1){ fmt.Printf("[DENIED] Reason: %s\n",status.Reason) }
+		if(status.Denied && logLevel == 1) { fmt.Println(string(dump)) }
+		if(status.Denied && logLevel >= 1){ fmt.Printf("[DENIED] Reason: %s\n",status.Reason) }
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(sar)
@@ -91,11 +92,12 @@ func main() {
 	var unprivelegedGroup = flag.String("unpriveleged-group", "oidc:/platform-users", "Name of group which should have their permissions restricted for protected namespaces")
 	var protectedNamespacesCSL = flag.String("protected-namespaces", "kube-system,openstack-system", "Comma separated list of namespaces which unprivileged users will have limited permissions for")
 	var logLevel = flag.Int("log-level", 1, "Verbosity of logs. Values: [0-2]")
+	var opinionMode = flag.Bool("allow-opinion-mode",false,"Specifies if this webhook should give its opinion on requests which it doesn't deny. If true, will set 'allowed' to true in SubjectAccessReview.")
 	flag.Parse()
 
 	protectedNamespaces := strings.Split(*protectedNamespacesCSL, ",")
 
-	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, *unprivelegedGroup, *logLevel))
+	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, *unprivelegedGroup, *opinionMode, *logLevel))
 	fmt.Printf("Server started\n")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
