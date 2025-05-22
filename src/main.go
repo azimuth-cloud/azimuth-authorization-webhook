@@ -35,10 +35,10 @@ type SubjectAccessReviewSpecAPI struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
-func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) func(w http.ResponseWriter, r *http.Request) {
+func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,logLevel int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Printf("Request received from %s\n:", r.RemoteAddr)
+		if(logLevel >= 2) { fmt.Printf("Request received from %s\n:", r.RemoteAddr) }
 
 		// Print dump for logging
 		dump, dumperr := httputil.DumpRequest(r, true)
@@ -46,11 +46,13 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) fu
 			fmt.Println("Error dumping request:", dumperr)
 			return
 		}
-		fmt.Println(string(dump))
+
+		if(logLevel >= 2) { fmt.Println(string(dump)) }
 
 		var sar SubjectAccessReviewAPI
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
+			fmt.Println("[ERROR] ",err.Error())
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
@@ -77,6 +79,9 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) fu
 
 		sar.Status = *status
 
+		if(!status.Allowed && logLevel == 1) { fmt.Println(string(dump)) }
+		if(!status.Allowed && logLevel >= 1){ fmt.Printf("[DENIED] Reason: %s\n",status.Reason) }
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(sar)
 	}
@@ -85,11 +90,12 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) fu
 func main() {
 	var unprivelegedGroup = flag.String("unpriveleged-group", "oidc:/platform-users", "Name of group which should have their permissions restricted for protected namespaces")
 	var protectedNamespacesCSL = flag.String("protected-namespaces", "kube-system,openstack-system", "Comma separated list of namespaces which unprivileged users will have limited permissions for")
+	var logLevel = flag.Int("log-level", 1, "Verbosity of logs. Values: [0-2]")
 	flag.Parse()
 
 	protectedNamespaces := strings.Split(*protectedNamespacesCSL, ",")
 
-	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, *unprivelegedGroup))
+	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, *unprivelegedGroup, *logLevel))
 	fmt.Printf("Server started\n")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
