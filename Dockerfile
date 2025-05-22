@@ -11,4 +11,4 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /azimuth-authorization-webhook
 
 EXPOSE 8080
 
-CMD ["/azimuth-authorization-webhook"]
+ENTRYPOINT ["/azimuth-authorization-webhook"]
