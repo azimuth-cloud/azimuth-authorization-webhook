@@ -5,12 +5,33 @@ import (
 	"flag"
 	"fmt"
 	authorizationv1 "k8s.io/api/authorization/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"slices"
 	"strings"
 )
+
+// Creating mirror of authorizationv1.SubjectAccessReview struct but with modified Spec
+// to account for disparity in name of group key between Go ('Groups') and HTTP ('Group') API
+// causing issues with JSON unmarshalling
+type SubjectAccessReviewAPI struct {
+	metav1.TypeMeta
+	metav1.ObjectMeta
+
+	Spec SubjectAccessReviewSpecAPI
+
+	Status authorizationv1.SubjectAccessReviewStatus
+}
+type SubjectAccessReviewSpecAPI struct {
+	ResourceAttributes *authorizationv1.ResourceAttributes
+	NonResourceAttributes *authorizationv1.NonResourceAttributes
+	User string
+	Group []string
+	Extra map[string]authorizationv1.ExtraValue
+	UID string
+}
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
@@ -27,7 +48,7 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) fu
 		}
 		fmt.Println(string(dump))
 
-		var sar authorizationv1.SubjectAccessReview
+		var sar SubjectAccessReviewAPI
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -36,7 +57,7 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string) fu
 
 		defer r.Body.Close()
 
-		isUnprivilegedUser := slices.Contains(sar.Spec.Groups, unprivilegedGroup)
+		isUnprivilegedUser := slices.Contains(sar.Spec.Group, unprivilegedGroup)
 		isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace) // TODO: test if you can bypass with empty or all namespaces
 		isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"                                       //TODO: test if you can bypass with * or singular nouns
 		isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
