@@ -29,6 +29,7 @@ type SubjectAccessReviewSpecAPI struct {
 	NonResourceAttributes *authorizationv1.NonResourceAttributes
 	User string
 	Group []string
+	Groups []string
 	Extra map[string]authorizationv1.ExtraValue
 	UID string
 }
@@ -59,7 +60,7 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,opi
 
 		defer r.Body.Close()
 
-		isUnprivilegedUser := slices.Contains(sar.Spec.Group, unprivilegedGroup)
+		isUnprivilegedUser := slices.Contains(sar.Spec.Groups, unprivilegedGroup) || slices.Contains(sar.Spec.Group, unprivilegedGroup)
 		isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace) // TODO: test if you can bypass with empty or all namespaces
 		isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"                                       //TODO: test if you can bypass with * or singular nouns
 		isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
