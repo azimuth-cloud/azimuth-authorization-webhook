@@ -84,6 +84,7 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,opi
 		if(status.Denied && logLevel == 1) { fmt.Println(string(dump)) }
 		if(status.Denied && logLevel >= 1){ fmt.Printf("[DENIED] Reason: %s\n",status.Reason) }
 
+		if(status.Denied){ w.WriteHeader(http.StatusUnauthorized) }
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(sar)
 	}
