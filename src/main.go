@@ -34,6 +34,12 @@ type SubjectAccessReviewSpecAPI struct {
 	UID string
 }
 
+type MinimalResponse struct {
+	ApiVersion string `json:"apiVersion"`
+	Kind string `json:"kind"`
+	Status authorizationv1.SubjectAccessReviewStatus `json:"status"`
+}
+
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
 func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,opinionMode bool,logLevel int) func(w http.ResponseWriter, r *http.Request) {
@@ -79,14 +85,16 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,opi
 		}
 		//todo: add status.EvaluationError handling
 
-		sar.Status = *status
+		responseReview := new(MinimalResponse)
+		responseReview.ApiVersion = "authorization.k8s.io/v1"
+		responseReview.Kind = "SubjectAccessReview"
+		responseReview.Status = *status
 
 		if(status.Denied && logLevel == 1) { fmt.Println(string(dump)) }
 		if(status.Denied && logLevel >= 1){ fmt.Printf("[DENIED] Reason: %s\n",status.Reason) }
 
-		if(status.Denied){ w.WriteHeader(http.StatusUnauthorized) }
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(sar)
+		json.NewEncoder(w).Encode(responseReview)
 	}
 }
 
