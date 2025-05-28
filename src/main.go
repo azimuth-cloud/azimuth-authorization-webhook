@@ -80,6 +80,7 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,opi
 			status.Denied = true
 			status.Reason = "Cannot write to protected namespace"
 		} else {
+			status.Denied = false
 			status.Allowed = opinionMode
 			if(!opinionMode){ status.Reason = "Webhook doesn't give opinion, delegated to other authorizers" }
 		}
