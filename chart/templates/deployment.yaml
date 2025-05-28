@@ -22,3 +22,8 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+          args:
+          - --log-level={{ .Values.logLevel }}
+          - --protected-namespaces={{ .Values.protectedNamespaces }}
+          - --unpriveleged-group={{ .Values.unprivilegedGroup }}
+          - --allow-opinion-mode={{ .Values.allowOpinionMode }}

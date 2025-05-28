@@ -1,2 +1,7 @@
 port: 8080
-version: ba46204
+version: d70f313
+
+logLevel: 1
+protectedNamespaces: "kube-system,openstack-system"
+unprivilegedGroup: "oidc:/platform-users"
+allowOpinionMode: false
