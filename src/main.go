@@ -34,7 +34,7 @@ type SubjectAccessReviewSpecAPI struct {
 	UID string
 }
 
-type MinimalResponse struct {
+type SubjectAccessReviewHTTPResponse struct {
 	ApiVersion string `json:"apiVersion"`
 	Kind string `json:"kind"`
 	Status authorizationv1.SubjectAccessReviewStatus `json:"status"`
@@ -85,7 +85,7 @@ func createAuthorizer(protectedNamespaces []string, unprivilegedGroup string,opi
 		}
 		//todo: add status.EvaluationError handling
 
-		responseReview := new(MinimalResponse)
+		responseReview := new(SubjectAccessReviewHTTPResponse)
 		responseReview.ApiVersion = "authorization.k8s.io/v1"
 		responseReview.Kind = "SubjectAccessReview"
 		responseReview.Status = *status
