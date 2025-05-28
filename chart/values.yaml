@@ -5,3 +5,12 @@ logLevel: 1
 protectedNamespaces: "kube-system,openstack-system"
 unprivilegedGroup: "oidc:/platform-users"
 allowOpinionMode: false
+
+ingress:
+  enabled: false
+  annotations: {}
+  ingressClassName:
+  host:
+  tls:
+    enabled: false
+    secretName:
