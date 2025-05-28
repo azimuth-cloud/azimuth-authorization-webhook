@@ -2,10 +2,10 @@ apiVersion: v1
 entries:
   azimuth-authorization-webhook:
   - apiVersion: v2
-    appVersion: a5a0411
-    created: "2025-05-28T09:04:56.247090717Z"
+    appVersion: a271838
+    created: "2025-05-28T09:24:35.209862744Z"
     description: A Helm chart for Kubernetes
-    digest: 87a0d7e341d5faa569ee55fd795a59968a04416b49ba84085ea1d1a2e335394e
+    digest: 392cd625ff4e62cb45c61b09fdca9e708e71fb9fa83f542be31a8f4b59a1605c
     name: azimuth-authorization-webhook
     type: application
     urls:
@@ -13,7 +13,7 @@ entries:
     version: 0.1.0-dev.0.main.15
   - apiVersion: v2
     appVersion: ad97ebf
-    created: "2025-05-28T09:04:56.246842352Z"
+    created: "2025-05-28T09:24:35.209519715Z"
     description: A Helm chart for Kubernetes
     digest: cb6a895a8d69894928f14ca33633a75f43f274ebf2c5c57cf027a4dc7836e895
     name: azimuth-authorization-webhook
@@ -21,4 +21,4 @@ entries:
     urls:
     - azimuth-authorization-webhook-0.1.0-dev.0.main.14.tgz
     version: 0.1.0-dev.0.main.14
-generated: "2025-05-28T09:04:56.246146531Z"
+generated: "2025-05-28T09:24:35.208811654Z"
