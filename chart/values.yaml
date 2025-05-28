@@ -1,5 +1,5 @@
 port: 8080
-version: d70f313
+version: 2f72ea1
 
 logLevel: 1
 protectedNamespaces: "kube-system,openstack-system"
