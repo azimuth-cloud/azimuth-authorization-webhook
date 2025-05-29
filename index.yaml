@@ -2,8 +2,18 @@ apiVersion: v1
 entries:
   azimuth-authorization-webhook:
   - apiVersion: v2
+    appVersion: 0278fa3
+    created: "2025-05-29T10:55:37.469664243Z"
+    description: A Helm chart for Kubernetes
+    digest: 636c66c4a582991b577b1c0cb267ee0d84be0a3efcdd2f51699d08dd8926ab0d
+    name: azimuth-authorization-webhook
+    type: application
+    urls:
+    - azimuth-authorization-webhook-0.1.0-dev.0.main.18.tgz
+    version: 0.1.0-dev.0.main.18
+  - apiVersion: v2
     appVersion: 4968bd2
-    created: "2025-05-28T14:59:10.266400605Z"
+    created: "2025-05-29T10:55:37.469446727Z"
     description: A Helm chart for Kubernetes
     digest: 6a77ea546e877e4a4f791cdfab261c2f5f00d01e3557af227b59242603483ed1
     name: azimuth-authorization-webhook
@@ -13,7 +23,7 @@ entries:
     version: 0.1.0-dev.0.main.17
   - apiVersion: v2
     appVersion: 2f72ea1
-    created: "2025-05-28T14:59:10.266193638Z"
+    created: "2025-05-29T10:55:37.469268695Z"
     description: A Helm chart for Kubernetes
     digest: fed99abc56e764e3710d863d29364a267a5f4c59177fd86de6db651da189843d
     name: azimuth-authorization-webhook
@@ -23,7 +33,7 @@ entries:
     version: 0.1.0-dev.0.main.16
   - apiVersion: v2
     appVersion: a271838
-    created: "2025-05-28T14:59:10.265988253Z"
+    created: "2025-05-29T10:55:37.469055025Z"
     description: A Helm chart for Kubernetes
     digest: 392cd625ff4e62cb45c61b09fdca9e708e71fb9fa83f542be31a8f4b59a1605c
     name: azimuth-authorization-webhook
@@ -33,7 +43,7 @@ entries:
     version: 0.1.0-dev.0.main.15
   - apiVersion: v2
     appVersion: ad97ebf
-    created: "2025-05-28T14:59:10.265739849Z"
+    created: "2025-05-29T10:55:37.468814356Z"
     description: A Helm chart for Kubernetes
     digest: cb6a895a8d69894928f14ca33633a75f43f274ebf2c5c57cf027a4dc7836e895
     name: azimuth-authorization-webhook
@@ -41,4 +51,4 @@ entries:
     urls:
     - azimuth-authorization-webhook-0.1.0-dev.0.main.14.tgz
     version: 0.1.0-dev.0.main.14
-generated: "2025-05-28T14:59:10.265363955Z"
+generated: "2025-05-29T10:55:37.468517251Z"
