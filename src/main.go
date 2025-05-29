@@ -43,7 +43,7 @@ type SubjectAccessReviewHTTPResponse struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
-func isInternalAccount(user string, namespace string) bool {
+func isPrivilegedForNamespace(user string, namespace string) bool {
 
 	systemAccountRegex, _ := regexp.Compile("system:.+")
 	namespaceServiceAccountRegex, err := regexp.Compile("system:serviceaccount:" + namespace + ":.+")
@@ -62,7 +62,7 @@ func isInternalAccount(user string, namespace string) bool {
 	return false
 }
 
-func createAuthorizer(protectedNamespaces []string, opinionMode bool, logLevel int) func(w http.ResponseWriter, r *http.Request) {
+func createAuthorizer(protectedNamespaces []string, additionalPrivilegedUsers []string, opinionMode bool, logLevel int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Print dump for logging
@@ -82,27 +82,32 @@ func createAuthorizer(protectedNamespaces []string, opinionMode bool, logLevel i
 
 		defer r.Body.Close()
 
-		isPrivilegedUser := sar.Spec.ResourceAttributes != nil && isInternalAccount(sar.Spec.User, sar.Spec.ResourceAttributes.Namespace)
+		isPrivilegedUser := slices.Contains(additionalPrivilegedUsers, sar.Spec.User)
+		userPrivilegedForNamespace := sar.Spec.ResourceAttributes != nil && isPrivilegedForNamespace(sar.Spec.User, sar.Spec.ResourceAttributes.Namespace)
 		isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace) // TODO: test if you can bypass with empty or all namespaces
 		isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"                                       //TODO: test if you can bypass with * or singular nouns
 		isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
 
 		status := new(authorizationv1.SubjectAccessReviewStatus)
 		status.Allowed = false
-		if !isPrivilegedUser && isProtectedNamespace && isSecret {
+		if isPrivilegedUser {
+			status.Denied = false
+			status.Allowed = opinionMode
+		} else if !userPrivilegedForNamespace && isProtectedNamespace && isSecret {
 			status.Denied = true
 			status.Reason = "Cannot access secrets in protected namespace"
-		} else if !isPrivilegedUser && isProtectedNamespace && !isReadonlyVerb {
+		} else if !userPrivilegedForNamespace && isProtectedNamespace && !isReadonlyVerb {
 			status.Denied = true
 			status.Reason = "Cannot write to protected namespace"
 		} else {
 			status.Denied = false
 			status.Allowed = opinionMode
-			if !opinionMode {
-				status.Reason = "Webhook doesn't give opinion, delegated to other authorizers"
-			}
 		}
 		//todo: add status.EvaluationError handling
+
+		if !opinionMode && !status.Denied {
+			status.Reason = "Webhook doesn't give opinion, delegated to other authorizers"
+		}
 
 		responseReview := new(SubjectAccessReviewHTTPResponse)
 		responseReview.ApiVersion = "authorization.k8s.io/v1"
@@ -133,14 +138,16 @@ func createAuthorizer(protectedNamespaces []string, opinionMode bool, logLevel i
 }
 
 func main() {
+	var additionalPrivilegedUsersCSL = flag.String("additional-privileged-users", "kubernetes-admin", "Comma separated list of users that should be allowed to write to protected namespaces, excluding 'system:*' users")
 	var protectedNamespacesCSL = flag.String("protected-namespaces", "kube-system,openstack-system", "Comma separated list of namespaces which unprivileged users will have limited permissions for")
 	var logLevel = flag.Int("log-level", 1, "Verbosity of logs. Values: [0-2]")
 	var opinionMode = flag.Bool("allow-opinion-mode", false, "Specifies if this webhook should give its opinion on requests which it doesn't deny. If true, will set 'allowed' to true in SubjectAccessReview.")
 	flag.Parse()
 
 	protectedNamespaces := strings.Split(*protectedNamespacesCSL, ",")
+	additionalPrivilegedUsers := strings.Split(*additionalPrivilegedUsersCSL, ",")
 
-	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, *opinionMode, *logLevel))
+	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, additionalPrivilegedUsers, *opinionMode, *logLevel))
 	fmt.Printf("Server started\n")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
