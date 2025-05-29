@@ -2,7 +2,9 @@ port: 8080
 version: 2f72ea1
 
 logLevel: 1
-protectedNamespaces: "kube-system,openstack-system"
+protectedNamespaces:
+  - kube-system
+  - openstack-system
 unprivilegedGroup: "oidc:/platform-users"
 allowOpinionMode: false
 

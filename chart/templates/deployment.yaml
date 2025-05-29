@@ -24,6 +24,6 @@ spec:
               protocol: TCP
           args:
           - --log-level={{ .Values.logLevel }}
-          - --protected-namespaces={{ .Values.protectedNamespaces }}
+          - --protected-namespaces={{ join "," .Values.protectedNamespaces }}
           - --unpriveleged-group={{ .Values.unprivilegedGroup }}
           - --allow-opinion-mode={{ .Values.allowOpinionMode }}
