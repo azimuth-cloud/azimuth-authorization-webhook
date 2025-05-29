@@ -25,5 +25,4 @@ spec:
           args:
           - --log-level={{ .Values.logLevel }}
           - --protected-namespaces={{ join "," .Values.protectedNamespaces }}
-          - --unpriveleged-group={{ .Values.unprivilegedGroup }}
           - --allow-opinion-mode={{ .Values.allowOpinionMode }}
