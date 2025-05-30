@@ -13,9 +13,9 @@ var defaultAdditionalPrivilegedUsers = []string{}
 
 var defaultAuthorizer func(w http.ResponseWriter, r *http.Request) = CreateWebhookAuthorizer(defaultProtectedNamespaces, defaultAdditionalPrivilegedUsers, false, 0)
 
-func TestSystemUserAllowed(t *testing.T){
-	accessTest(t,defaultAuthorizer,false,
-		[]byte (
+func TestSystemUserAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -36,9 +36,9 @@ func TestSystemUserAllowed(t *testing.T){
 			}`))
 }
 
-func TestNamespaceServiceAccountAllowed(t *testing.T){
-	accessTest(t,defaultAuthorizer,false,
-		[]byte (
+func TestNamespaceServiceAccountAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -59,9 +59,9 @@ func TestNamespaceServiceAccountAllowed(t *testing.T){
 			}`))
 }
 
-func TestWrongNamespaceServiceAccountDenied(t *testing.T){
-	accessTest(t,defaultAuthorizer,true,
-		[]byte (
+func TestWrongNamespaceServiceAccountDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -82,9 +82,9 @@ func TestWrongNamespaceServiceAccountDenied(t *testing.T){
 			}`))
 }
 
-func TestSystemAnonymousDenied(t *testing.T){
-	accessTest(t,defaultAuthorizer,true,
-		[]byte (
+func TestSystemAnonymousDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -105,20 +105,20 @@ func TestSystemAnonymousDenied(t *testing.T){
 			}`))
 }
 
-func TestInvalidJSONDenied(t *testing.T){
+func TestInvalidJSONDenied(t *testing.T) {
 	data := bytes.NewBuffer([]byte("{ bad json }"))
 	req := httptest.NewRequest(http.MethodPost, "/authorize", data)
 	req.Header.Set("Content-Type", "application/json")
 	resp := httptest.NewRecorder()
 	defaultAuthorizer(resp, req)
-	if(resp.Code != http.StatusBadRequest){
+	if resp.Code != http.StatusBadRequest {
 		t.Error("Expected 400 error for invalid JSON")
 	}
 }
 
-func TestInvalidRegexDenied(t *testing.T){
-	accessTest(t,defaultAuthorizer,false,
-		[]byte (
+func TestInvalidRegexDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -139,10 +139,10 @@ func TestInvalidRegexDenied(t *testing.T){
 			}`))
 }
 
-func TestPrivilegedUserAllowed(t *testing.T){
+func TestPrivilegedUserAllowed(t *testing.T) {
 	authorizer := CreateWebhookAuthorizer(defaultProtectedNamespaces, []string{"kubernetes-admin"}, false, 0)
-	accessTest(t,authorizer,false,
-		[]byte (
+	accessTest(t, authorizer, false,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -163,9 +163,9 @@ func TestPrivilegedUserAllowed(t *testing.T){
 			}`))
 }
 
-func TestUnprivilegedUserDenied(t *testing.T){
-	accessTest(t,defaultAuthorizer,true,
-		[]byte (
+func TestUnprivilegedUserDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -186,9 +186,9 @@ func TestUnprivilegedUserDenied(t *testing.T){
 			}`))
 }
 
-func TestReadUnprotectedSecretsAllowed(t *testing.T){
-	accessTest(t,defaultAuthorizer,false,
-		[]byte (
+func TestReadUnprotectedSecretsAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -209,9 +209,9 @@ func TestReadUnprotectedSecretsAllowed(t *testing.T){
 			}`))
 }
 
-func TestReadProtectedNonSecretsAllowed(t *testing.T){
-	accessTest(t,defaultAuthorizer,false,
-		[]byte (
+func TestReadProtectedNonSecretsAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -232,9 +232,9 @@ func TestReadProtectedNonSecretsAllowed(t *testing.T){
 			}`))
 }
 
-func TestWriteProtectedNonSecretsDenied(t *testing.T){
-	accessTest(t,defaultAuthorizer,true,
-		[]byte (
+func TestWriteProtectedNonSecretsDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -255,9 +255,9 @@ func TestWriteProtectedNonSecretsDenied(t *testing.T){
 			}`))
 }
 
-func TestWriteUnprotectedResourcesAllowed(t *testing.T){
-	accessTest(t,defaultAuthorizer,false,
-		[]byte (
+func TestWriteUnprotectedResourcesAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
 			"apiVersion":"authorization.k8s.io/v1",
@@ -278,7 +278,7 @@ func TestWriteUnprotectedResourcesAllowed(t *testing.T){
 			}`))
 }
 
-func accessTest(t *testing.T,authorizer func(w http.ResponseWriter, r *http.Request), expectDenied bool, jsonData []byte) {
+func accessTest(t *testing.T, authorizer func(w http.ResponseWriter, r *http.Request), expectDenied bool, jsonData []byte) {
 	data := bytes.NewBuffer(jsonData)
 	req := httptest.NewRequest(http.MethodPost, "/authorize", data)
 	req.Header.Set("Content-Type", "application/json")
@@ -286,11 +286,11 @@ func accessTest(t *testing.T,authorizer func(w http.ResponseWriter, r *http.Requ
 	authorizer(resp, req)
 	var sarResponse SubjectAccessReviewHTTPResponse
 	_ = json.NewDecoder(resp.Body).Decode(&sarResponse)
-	if(sarResponse.Status.Denied != expectDenied){
+	if sarResponse.Status.Denied != expectDenied {
 		var expectedResp string
-		if(expectDenied){
+		if expectDenied {
 			expectedResp = "denied"
-		}else{
+		} else {
 			expectedResp = "allowed"
 		}
 		t.Errorf("Expected request to be %s\n", expectedResp)

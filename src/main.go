@@ -49,7 +49,7 @@ func isPrivilegedForNamespace(user string, namespace string) bool {
 	serviceAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
 	namespaceServiceAccountRegex, err := regexp.Compile("system:serviceaccount:" + namespace + ":.+")
 	if err != nil {
-		fmt.Printf("Error compiling regex \"system:serviceaccount:%s:.+\": %s\n",namespace,err.Error())
+		fmt.Printf("Error compiling regex \"system:serviceaccount:%s:.+\": %s\n", namespace, err.Error())
 		return false
 	}
 
