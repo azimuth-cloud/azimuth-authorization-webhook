@@ -46,6 +46,7 @@ var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 func isPrivilegedForNamespace(user string, namespace string) bool {
 
 	systemAccountRegex, _ := regexp.Compile("system:.+")
+	serviceAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
 	namespaceServiceAccountRegex, err := regexp.Compile("system:serviceaccount:" + namespace + ":.+")
 	if err != nil {
 		fmt.Printf("Error compiling regex \"system:serviceaccount:%s:.+\": %s\n",namespace,err.Error())
@@ -54,8 +55,8 @@ func isPrivilegedForNamespace(user string, namespace string) bool {
 
 	if user == "system:anonymous" {
 		return false
-	} else if namespaceServiceAccountRegex.MatchString(user) {
-		return true
+	} else if serviceAccountRegex.MatchString(user) {
+		return namespaceServiceAccountRegex.MatchString(user)
 	} else if systemAccountRegex.MatchString(user) {
 		return true
 	}
