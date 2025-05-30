@@ -59,6 +59,12 @@ func TestNamespaceServiceAccountAllowed(t *testing.T) {
 			}`))
 }
 
+func TestCrossProtectedNamespaceServiceAccountAccessAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
+			`{"kind":"SubjectAccessReview","apiVersion":"authorization.k8s.io/v1","metadata":{"creationTimestamp":null},"spec":{"resourceAttributes":{"namespace":"openstack-system","verb":"create","group":"apps","version":"v1","resource":"controllerrevisions"},"user":"system:serviceaccount:kube-system:daemon-set-controller","groups":["system:serviceaccounts","system:serviceaccounts:kube-system","system:authenticated"],"extra":{"authentication.kubernetes.io/credential-id":["JTI=3cf7d9de-5324-4df7-9447-47adb900f846"]},"uid":"cb35e0b5-1cfb-432f-acdf-5b5a0f924211"},"status":{"allowed":false}}`))
+}
+
 func TestWrongNamespaceServiceAccountDenied(t *testing.T) {
 	accessTest(t, defaultAuthorizer, true,
 		[]byte(
@@ -114,29 +120,6 @@ func TestInvalidJSONDenied(t *testing.T) {
 	if resp.Code != http.StatusBadRequest {
 		t.Error("Expected 400 error for invalid JSON")
 	}
-}
-
-func TestInvalidRegexDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
-		[]byte(
-			`{
-			"kind":"SubjectAccessReview",
-			"apiVersion":"authorization.k8s.io/v1",
-			"spec":{
-				"resourceAttributes":{
-					"namespace":"[badregexnamespace",
-					"verb":"get",
-					"version":"v1",
-					"resource":"secrets",
-					"name":"important-creds"
-				},
-				"user":"system:serviceaccount:[badregexnamespace:bad-user",
-				"groups":["system:authenticated"]
-			},
-			"status":{
-				"allowed":false
-			}
-			}`))
 }
 
 func TestPrivilegedUserAllowed(t *testing.T) {

@@ -43,20 +43,17 @@ type SubjectAccessReviewHTTPResponse struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
-func isPrivilegedForNamespace(user string, namespace string) bool {
+func isPrivilegedForNamespace(user string, namespace string, protectedNamespaces []string) bool {
 
 	systemAccountRegex, _ := regexp.Compile("system:.+")
 	serviceAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
-	namespaceServiceAccountRegex, err := regexp.Compile("system:serviceaccount:" + namespace + ":.+")
-	if err != nil {
-		fmt.Printf("Error compiling regex \"system:serviceaccount:%s:.+\": %s\n", namespace, err.Error())
-		return false
-	}
 
 	if user == "system:anonymous" {
 		return false
 	} else if serviceAccountRegex.MatchString(user) {
-		return namespaceServiceAccountRegex.MatchString(user)
+		// Considers service accounts from protected namespaces as privileged
+		serviceAccountNamespace := strings.Split(user, ":")[2]
+		return slices.Contains(protectedNamespaces, serviceAccountNamespace)
 	} else if systemAccountRegex.MatchString(user) {
 		return true
 	}
@@ -85,7 +82,7 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		defer r.Body.Close()
 
 		isPrivilegedUser := slices.Contains(additionalPrivilegedUsers, sar.Spec.User)
-		userPrivilegedForNamespace := sar.Spec.ResourceAttributes != nil && isPrivilegedForNamespace(sar.Spec.User, sar.Spec.ResourceAttributes.Namespace)
+		userPrivilegedForNamespace := sar.Spec.ResourceAttributes != nil && isPrivilegedForNamespace(sar.Spec.User, sar.Spec.ResourceAttributes.Namespace, protectedNamespaces)
 		isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace) // TODO: test if you can bypass with empty or all namespaces
 		isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"                                       //TODO: test if you can bypass with * or singular nouns
 		isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
