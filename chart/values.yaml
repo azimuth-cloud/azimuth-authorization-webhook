@@ -1,5 +1,5 @@
 port: 8080
-version: df39e6e
+version: 866cb1a
 
 logLevel: 1
 protectedNamespaces:
