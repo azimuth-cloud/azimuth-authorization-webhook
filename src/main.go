@@ -78,7 +78,7 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
 			fmt.Println("JSON decoding error: ", err.Error())
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			http.Error(w, "JSON decoding error: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 

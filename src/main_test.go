@@ -106,7 +106,14 @@ func TestSystemAnonymousDenied(t *testing.T){
 }
 
 func TestInvalidJSONDenied(t *testing.T){
-	accessTest(t,defaultAuthorizer,true,[]byte("{ bad json }"))
+	data := bytes.NewBuffer([]byte("{ bad json }"))
+	req := httptest.NewRequest(http.MethodPost, "/authorize", data)
+	req.Header.Set("Content-Type", "application/json")
+	resp := httptest.NewRecorder()
+	defaultAuthorizer(resp, req)
+	if(resp.Code != http.StatusBadRequest){
+		t.Error("Expected 400 error for invalid JSON")
+	}
 }
 
 func TestInvalidRegexDenied(t *testing.T){
