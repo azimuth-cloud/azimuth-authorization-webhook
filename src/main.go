@@ -48,7 +48,8 @@ func isPrivilegedForNamespace(user string, namespace string) bool {
 	systemAccountRegex, _ := regexp.Compile("system:.+")
 	namespaceServiceAccountRegex, err := regexp.Compile("system:serviceaccount:" + namespace + ":.+")
 	if err != nil {
-		fmt.Printf("Error compiling regex " + "\"system:serviceaccount:" + namespace + ":.+\": " + err.Error())
+		fmt.Printf("Error compiling regex \"system:serviceaccount:%s:.+\": %s\n",namespace,err.Error())
+		return false
 	}
 
 	if user == "system:anonymous" {
@@ -62,7 +63,7 @@ func isPrivilegedForNamespace(user string, namespace string) bool {
 	return false
 }
 
-func createAuthorizer(protectedNamespaces []string, additionalPrivilegedUsers []string, opinionMode bool, logLevel int) func(w http.ResponseWriter, r *http.Request) {
+func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedUsers []string, opinionMode bool, logLevel int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Print dump for logging
@@ -75,7 +76,7 @@ func createAuthorizer(protectedNamespaces []string, additionalPrivilegedUsers []
 		var sar SubjectAccessReviewAPI
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
-			fmt.Println("[ERROR] ", err.Error())
+			fmt.Println("JSON decoding error: ", err.Error())
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
@@ -147,7 +148,7 @@ func main() {
 	protectedNamespaces := strings.Split(*protectedNamespacesCSL, ",")
 	additionalPrivilegedUsers := strings.Split(*additionalPrivilegedUsersCSL, ",")
 
-	http.HandleFunc("/authorize", createAuthorizer(protectedNamespaces, additionalPrivilegedUsers, *opinionMode, *logLevel))
+	http.HandleFunc("/authorize", CreateWebhookAuthorizer(protectedNamespaces, additionalPrivilegedUsers, *opinionMode, *logLevel))
 	fmt.Printf("Server started\n")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
