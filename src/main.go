@@ -123,14 +123,12 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		
 		status := new(authorizationv1.SubjectAccessReviewStatus)
 		status.Denied = !authorized
+		status.Allowed = opinionMode && authorized
 		
 		if(status.Denied){
 			status.Reason = denyReason
 		}else if(!opinionMode){
-			status.Allowed = false
 			status.Reason = "Webhook doesn't give opinion, delegated to other authorizers"
-		}else{
-			status.Allowed = true
 		}
 
 		responseReview := new(SubjectAccessReviewHTTPResponse)
