@@ -284,29 +284,6 @@ func TestEmptyNamespacesRequestsDenied(t *testing.T) {
 			}`))
 }
 
-func TestAllNamespacesRequestsDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
-		[]byte(
-			`{
-			"kind":"SubjectAccessReview",
-			"apiVersion":"authorization.k8s.io/v1",
-			"spec":{
-				"resourceAttributes":{
-					"namespace":"all",
-					"verb":"get",
-					"version":"v1",
-					"resource":"secrets",
-					"name":"important-creds"
-				},
-				"user":"not-admin",
-				"groups":["group1"]
-			},
-			"status":{
-				"allowed":false
-			}
-			}`))
-}
-
 func TestProtectedReadAllRequestsDenied(t *testing.T) {
 	accessTest(t, defaultAuthorizer, true,
 		[]byte(
