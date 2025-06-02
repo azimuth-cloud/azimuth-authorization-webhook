@@ -1,11 +1,13 @@
 port: 8080
-version: 2f72ea1
+version: 13a5067
 
 logLevel: 1
 protectedNamespaces:
   - kube-system
   - openstack-system
-unprivilegedGroup: "oidc:/platform-users"
+additionalPrivilegedUsers:
+  - kubernetes-admin
+  - kube-apiserver-kubelet-client
 allowOpinionMode: false
 
 ingress:
