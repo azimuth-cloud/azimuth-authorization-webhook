@@ -17,6 +17,7 @@ import (
 // Creating mirror of authorizationv1.SubjectAccessReview struct but with modified Spec
 // to account for disparity in name of group key between Go ('Groups') and HTTP ('Group') API
 // causing issues with JSON unmarshalling
+// Should not be written as HTTP response
 type SubjectAccessReviewAPI struct {
 	metav1.TypeMeta
 	metav1.ObjectMeta
@@ -35,6 +36,8 @@ type SubjectAccessReviewSpecAPI struct {
 	UID                   string
 }
 
+
+// Minimal SubjectAccessReview HTTP response
 type SubjectAccessReviewHTTPResponse struct {
 	ApiVersion string                                    `json:"apiVersion"`
 	Kind       string                                    `json:"kind"`
@@ -43,6 +46,7 @@ type SubjectAccessReviewHTTPResponse struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
+// Returns true if user is a service account with correct privileges or a privileged internal K8s system user
 func isPrivilegedSystemUser(user string, protectedNamespaces []string) bool {
 
 	systemAccountRegex, _ := regexp.Compile("system:.+")
@@ -51,20 +55,54 @@ func isPrivilegedSystemUser(user string, protectedNamespaces []string) bool {
 	if user == "system:anonymous" {
 		return false
 	} else if serviceAccountRegex.MatchString(user) {
-		// Considers service accounts from protected namespaces as privileged
+		// Allows service accounts if they originate from protected namespaces
 		serviceAccountNamespace := strings.Split(user, ":")[2]
 		return slices.Contains(protectedNamespaces, serviceAccountNamespace)
 	} else if systemAccountRegex.MatchString(user) {
+		// All other system accounts allowed
 		return true
 	}
 
 	return false
 }
 
+// Returns true if request passes webhook's resource access checks. If false, string with reason for rejection will also be returned, otherwise nil string
+func isRequestAuthorized(sar SubjectAccessReviewAPI,protectedNamespaces []string,additionalPrivilegedUsers []string) (bool, string) {
+	isPrivilegedUser := slices.Contains(additionalPrivilegedUsers, sar.Spec.User)
+	isPrivilegedSystemUser := sar.Spec.ResourceAttributes != nil && isPrivilegedSystemUser(sar.Spec.User, protectedNamespaces)
+	isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace)
+	isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"
+	isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
+	isAllNamespaceRequest := sar.Spec.ResourceAttributes != nil && (sar.Spec.ResourceAttributes.Namespace == "" || sar.Spec.ResourceAttributes.Namespace == "all")
+	isAllResourceRequest := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "*"
+
+	var denyReason string
+	authorized := false
+	if isPrivilegedUser {
+		authorized = true
+	} else if !isPrivilegedSystemUser && isAllNamespaceRequest {
+		authorized = false
+		denyReason = "Cannot make all namespace requests"
+	} else if isProtectedNamespace && !isPrivilegedSystemUser && isAllResourceRequest {
+		authorized = false
+		denyReason = "Cannot make all resource requests in protected namespace"
+	} else if isProtectedNamespace && !isPrivilegedSystemUser && isSecret {
+		authorized = false
+		denyReason = "Cannot access secrets in protected namespace"
+	} else if isProtectedNamespace && !isPrivilegedSystemUser && !isReadonlyVerb {
+		authorized = false
+		denyReason = "Cannot write to protected namespace"
+	} else {
+		authorized = true
+	}
+	return authorized, denyReason
+}
+
+
+// Returns HTTP request handler to handle SubjectAccessReview API requests
 func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedUsers []string, opinionMode bool, logLevel int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Print dump for logging
 		dump, dumperr := httputil.DumpRequest(r, true)
 		if dumperr != nil {
 			fmt.Println("Error dumping request:", dumperr)
@@ -81,38 +119,18 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 
 		defer r.Body.Close()
 
-		isPrivilegedUser := slices.Contains(additionalPrivilegedUsers, sar.Spec.User)
-		isPrivilegedSystemUser := sar.Spec.ResourceAttributes != nil && isPrivilegedSystemUser(sar.Spec.User, protectedNamespaces)
-		isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace)
-		isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"
-		isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
-		isAllNamespaceRequest := sar.Spec.ResourceAttributes != nil && (sar.Spec.ResourceAttributes.Namespace == "" || sar.Spec.ResourceAttributes.Namespace == "all")
-		isAllResourceRequest := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "*"
-
+		authorized, denyReason := isRequestAuthorized(sar,protectedNamespaces,additionalPrivilegedUsers)
+		
 		status := new(authorizationv1.SubjectAccessReviewStatus)
-		status.Allowed = false
-		if isPrivilegedUser {
-			status.Denied = false
-			status.Allowed = opinionMode
-		} else if !isPrivilegedSystemUser && isAllNamespaceRequest {
-			status.Denied = true
-			status.Reason = "Cannot make all namespace requests"
-		} else if isProtectedNamespace && !isPrivilegedSystemUser && isAllResourceRequest {
-			status.Denied = true
-			status.Reason = "Cannot make all resource requests in protected namespace"
-		} else if isProtectedNamespace && !isPrivilegedSystemUser && isSecret {
-			status.Denied = true
-			status.Reason = "Cannot access secrets in protected namespace"
-		} else if isProtectedNamespace && !isPrivilegedSystemUser && !isReadonlyVerb {
-			status.Denied = true
-			status.Reason = "Cannot write to protected namespace"
-		} else {
-			status.Denied = false
-			status.Allowed = opinionMode
-		}
-
-		if !opinionMode && !status.Denied {
+		status.Denied = !authorized
+		
+		if(status.Denied){
+			status.Reason = denyReason
+		}else if(!opinionMode){
+			status.Allowed = false
 			status.Reason = "Webhook doesn't give opinion, delegated to other authorizers"
+		}else{
+			status.Allowed = true
 		}
 
 		responseReview := new(SubjectAccessReviewHTTPResponse)
