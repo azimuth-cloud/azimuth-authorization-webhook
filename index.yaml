@@ -3,7 +3,7 @@ entries:
   azimuth-authorization-webhook:
   - apiVersion: v2
     appVersion: 0278fa3
-    created: "2025-06-02T14:31:20.852224593Z"
+    created: "2025-06-02T14:35:14.566059221Z"
     description: A Helm chart for Kubernetes
     digest: 636c66c4a582991b577b1c0cb267ee0d84be0a3efcdd2f51699d08dd8926ab0d
     name: azimuth-authorization-webhook
@@ -13,7 +13,7 @@ entries:
     version: 0.1.0-dev.0.main.18
   - apiVersion: v2
     appVersion: 4968bd2
-    created: "2025-06-02T14:31:20.852025093Z"
+    created: "2025-06-02T14:35:14.565867623Z"
     description: A Helm chart for Kubernetes
     digest: 6a77ea546e877e4a4f791cdfab261c2f5f00d01e3557af227b59242603483ed1
     name: azimuth-authorization-webhook
@@ -23,7 +23,7 @@ entries:
     version: 0.1.0-dev.0.main.17
   - apiVersion: v2
     appVersion: 2f72ea1
-    created: "2025-06-02T14:31:20.851718272Z"
+    created: "2025-06-02T14:35:14.565691805Z"
     description: A Helm chart for Kubernetes
     digest: fed99abc56e764e3710d863d29364a267a5f4c59177fd86de6db651da189843d
     name: azimuth-authorization-webhook
@@ -33,7 +33,7 @@ entries:
     version: 0.1.0-dev.0.main.16
   - apiVersion: v2
     appVersion: a271838
-    created: "2025-06-02T14:31:20.851241328Z"
+    created: "2025-06-02T14:35:14.565465542Z"
     description: A Helm chart for Kubernetes
     digest: 392cd625ff4e62cb45c61b09fdca9e708e71fb9fa83f542be31a8f4b59a1605c
     name: azimuth-authorization-webhook
@@ -43,7 +43,7 @@ entries:
     version: 0.1.0-dev.0.main.15
   - apiVersion: v2
     appVersion: ad97ebf
-    created: "2025-06-02T14:31:20.850875619Z"
+    created: "2025-06-02T14:35:14.56527223Z"
     description: A Helm chart for Kubernetes
     digest: cb6a895a8d69894928f14ca33633a75f43f274ebf2c5c57cf027a4dc7836e895
     name: azimuth-authorization-webhook
@@ -52,8 +52,18 @@ entries:
     - azimuth-authorization-webhook-0.1.0-dev.0.main.14.tgz
     version: 0.1.0-dev.0.main.14
   - apiVersion: v2
+    appVersion: c85f6dc
+    created: "2025-06-02T14:35:14.56510079Z"
+    description: A Helm chart for Kubernetes
+    digest: bb1b73b178710112c83f3b02e5553121e83d9699d4cddd83363a3a6e2de016c3
+    name: azimuth-authorization-webhook
+    type: application
+    urls:
+    - azimuth-authorization-webhook-0.1.0-dev.0.feat-system-users.40.tgz
+    version: 0.1.0-dev.0.feat-system-users.40
+  - apiVersion: v2
     appVersion: 13a5067
-    created: "2025-06-02T14:31:20.850364719Z"
+    created: "2025-06-02T14:35:14.564903441Z"
     description: A Helm chart for Kubernetes
     digest: ba8ecfc6d621b3efdfe259a1cbb3a6773cd8cfc70894f06af43a21684a65fb1a
     name: azimuth-authorization-webhook
@@ -63,7 +73,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.39
   - apiVersion: v2
     appVersion: 93ef7da
-    created: "2025-06-02T14:31:20.850172552Z"
+    created: "2025-06-02T14:35:14.564713636Z"
     description: A Helm chart for Kubernetes
     digest: 8b58e34704ca911c170c7aec8e1570744eb76e68ce1cd39f6faa017c94533be0
     name: azimuth-authorization-webhook
@@ -73,7 +83,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.38
   - apiVersion: v2
     appVersion: f31ac8a
-    created: "2025-06-02T14:31:20.849982639Z"
+    created: "2025-06-02T14:35:14.564499967Z"
     description: A Helm chart for Kubernetes
     digest: e014258cbb4d176493556efc4552cb0f63a5bc86027ac839d2794fa05134f0a2
     name: azimuth-authorization-webhook
@@ -83,7 +93,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.37
   - apiVersion: v2
     appVersion: 9593bf2
-    created: "2025-06-02T14:31:20.849758984Z"
+    created: "2025-06-02T14:35:14.564313117Z"
     description: A Helm chart for Kubernetes
     digest: 606d3cace67ca287f30ac4787442f48553da95792de305973dbbb1deee205329
     name: azimuth-authorization-webhook
@@ -93,7 +103,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.36
   - apiVersion: v2
     appVersion: 6adae90
-    created: "2025-06-02T14:31:20.849354622Z"
+    created: "2025-06-02T14:35:14.564130716Z"
     description: A Helm chart for Kubernetes
     digest: 42075c4ed87539e18da21b32bcc9c7bda89a61177a8589559f08b5f28fa77355
     name: azimuth-authorization-webhook
@@ -103,7 +113,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.35
   - apiVersion: v2
     appVersion: 3af60c7
-    created: "2025-06-02T14:31:20.849160512Z"
+    created: "2025-06-02T14:35:14.563931454Z"
     description: A Helm chart for Kubernetes
     digest: 213092b5e7967cbdf0765089becbee66a218ff0b9753696c74837c9ff50cf07b
     name: azimuth-authorization-webhook
@@ -113,7 +123,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.34
   - apiVersion: v2
     appVersion: eb9da50
-    created: "2025-06-02T14:31:20.848966992Z"
+    created: "2025-06-02T14:35:14.563744905Z"
     description: A Helm chart for Kubernetes
     digest: 219aa570623b33e515f533df8ecb4fd53dfc0ca61d0d28362d6ceb4f6cbb213c
     name: azimuth-authorization-webhook
@@ -123,7 +133,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.33
   - apiVersion: v2
     appVersion: 899228e
-    created: "2025-06-02T14:31:20.848725072Z"
+    created: "2025-06-02T14:35:14.563515646Z"
     description: A Helm chart for Kubernetes
     digest: 8dea1269a3c46bd62eb367ee91c204e518baaea0b8774141d4aa31514a4524a3
     name: azimuth-authorization-webhook
@@ -133,7 +143,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.31
   - apiVersion: v2
     appVersion: 866cb1a
-    created: "2025-06-02T14:31:20.848516936Z"
+    created: "2025-06-02T14:35:14.563305343Z"
     description: A Helm chart for Kubernetes
     digest: 30581b311eea7829df8979da1a9e681dfc133f5ce2ffc43ab7828f1121085a15
     name: azimuth-authorization-webhook
@@ -143,7 +153,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.30
   - apiVersion: v2
     appVersion: 8d637ab
-    created: "2025-06-02T14:31:20.848324839Z"
+    created: "2025-06-02T14:35:14.563096152Z"
     description: A Helm chart for Kubernetes
     digest: 0eef974a237274b92644a56f70d5b9305e4f2df987b1b121c2a3f4c6694acf1b
     name: azimuth-authorization-webhook
@@ -153,7 +163,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.29
   - apiVersion: v2
     appVersion: df39e6e
-    created: "2025-06-02T14:31:20.848133603Z"
+    created: "2025-06-02T14:35:14.562894405Z"
     description: A Helm chart for Kubernetes
     digest: 11d1450a9d3a156e172adb0632159d8e6aec054a24261f65c7b4b3f19b13be05
     name: azimuth-authorization-webhook
@@ -163,7 +173,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.28
   - apiVersion: v2
     appVersion: 78a688e
-    created: "2025-06-02T14:31:20.847928021Z"
+    created: "2025-06-02T14:35:14.562690584Z"
     description: A Helm chart for Kubernetes
     digest: 28da71e10737b9be5439d51023543b073a13daaf84dbc83126a0377748c96058
     name: azimuth-authorization-webhook
@@ -173,7 +183,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.27
   - apiVersion: v2
     appVersion: 97b336c
-    created: "2025-06-02T14:31:20.847720025Z"
+    created: "2025-06-02T14:35:14.562445947Z"
     description: A Helm chart for Kubernetes
     digest: 6fd29dce4a3c70f68b2f4ad7089b1281a52fe19dbbf1c8ed557f7995b4e35191
     name: azimuth-authorization-webhook
@@ -183,7 +193,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.25
   - apiVersion: v2
     appVersion: b24b669
-    created: "2025-06-02T14:31:20.847487953Z"
+    created: "2025-06-02T14:35:14.56222314Z"
     description: A Helm chart for Kubernetes
     digest: a2b01d2c38b7bdff549559326e5a34e751d5a2a365afd646c2fc9d3537859185
     name: azimuth-authorization-webhook
@@ -193,7 +203,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.24
   - apiVersion: v2
     appVersion: 5fd0285
-    created: "2025-06-02T14:31:20.847217531Z"
+    created: "2025-06-02T14:35:14.562001987Z"
     description: A Helm chart for Kubernetes
     digest: 2a03d14946ae6f7702a8d087b45257cb050aceb7050df2d428cfc90042df4d71
     name: azimuth-authorization-webhook
@@ -203,7 +213,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.23
   - apiVersion: v2
     appVersion: 3802f57
-    created: "2025-06-02T14:31:20.84698053Z"
+    created: "2025-06-02T14:35:14.561766116Z"
     description: A Helm chart for Kubernetes
     digest: 4ad25b2fedc654e325ea85c241da91a6987ff2b2398df939e987a849e7b05184
     name: azimuth-authorization-webhook
@@ -213,7 +223,7 @@ entries:
     version: 0.1.0-dev.0.feat-system-users.22
   - apiVersion: v2
     appVersion: "5178677"
-    created: "2025-06-02T14:31:20.846756624Z"
+    created: "2025-06-02T14:35:14.561196965Z"
     description: A Helm chart for Kubernetes
     digest: c41168140dc3758dfef17cdacfd84c410e489320842b5ffcaf026b4aae742355
     name: azimuth-authorization-webhook
@@ -221,4 +231,4 @@ entries:
     urls:
     - azimuth-authorization-webhook-0.1.0-dev.0.feat-system-users.21.tgz
     version: 0.1.0-dev.0.feat-system-users.21
-generated: "2025-06-02T14:31:20.846326746Z"
+generated: "2025-06-02T14:35:14.560484853Z"
