@@ -75,21 +75,19 @@ func isRequestAuthorized(sar SubjectAccessReviewAPI,protectedNamespaces []string
 	isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
 	isAllNamespaceRequest := sar.Spec.ResourceAttributes != nil && (sar.Spec.ResourceAttributes.Namespace == "" || sar.Spec.ResourceAttributes.Namespace == "all")
 	isAllResourceRequest := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "*"
+	isSensitiveNamespaceRequest := isAllNamespaceRequest || isProtectedNamespace
 
 	var denyReason string
 	authorized := false
 	if isPrivilegedUser {
 		authorized = true
-	} else if !isPrivilegedSystemUser && isAllNamespaceRequest {
-		authorized = false
-		denyReason = "Cannot make all namespace requests"
-	} else if isProtectedNamespace && !isPrivilegedSystemUser && isAllResourceRequest {
+	} else if isSensitiveNamespaceRequest && !isPrivilegedSystemUser && isAllResourceRequest {
 		authorized = false
 		denyReason = "Cannot make all resource requests in protected namespace"
-	} else if isProtectedNamespace && !isPrivilegedSystemUser && isSecret {
+	} else if isSensitiveNamespaceRequest && !isPrivilegedSystemUser && isSecret {
 		authorized = false
 		denyReason = "Cannot access secrets in protected namespace"
-	} else if isProtectedNamespace && !isPrivilegedSystemUser && !isReadonlyVerb {
+	} else if isSensitiveNamespaceRequest && !isPrivilegedSystemUser && !isReadonlyVerb {
 		authorized = false
 		denyReason = "Cannot write to protected namespace"
 	} else {
@@ -160,7 +158,7 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 }
 
 func main() {
-	var additionalPrivilegedUsersCSL = flag.String("additional-privileged-users", "kubernetes-admin", "Comma separated list of users that should be allowed to write to protected namespaces, excluding 'system:*' users")
+	var additionalPrivilegedUsersCSL = flag.String("additional-privileged-users", "kubernetes-admin,kube-apiserver-kubelet-client", "Comma separated list of users that should be allowed to write to protected namespaces, excluding 'system:*' users")
 	var protectedNamespacesCSL = flag.String("protected-namespaces", "kube-system,openstack-system", "Comma separated list of namespaces which unprivileged users will have limited permissions for")
 	var logLevel = flag.Int("log-level", 1, "Verbosity of logs. Values: [0-2]")
 	var opinionMode = flag.Bool("allow-opinion-mode", false, "Specifies if this webhook should give its opinion on requests which it doesn't deny. If true, will set 'allowed' to true in SubjectAccessReview.")
