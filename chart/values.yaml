@@ -1,5 +1,5 @@
 port: 8080
-version: 866cb1a
+version: eb9da50
 
 logLevel: 1
 protectedNamespaces:
