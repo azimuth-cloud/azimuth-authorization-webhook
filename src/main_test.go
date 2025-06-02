@@ -261,6 +261,144 @@ func TestWriteUnprotectedResourcesAllowed(t *testing.T) {
 			}`))
 }
 
+func TestEmptyNamespacesRequestsDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"",
+					"verb":"get",
+					"version":"v1",
+					"resource":"secrets",
+					"name":"important-creds"
+				},
+				"user":"not-admin",
+				"groups":["group1"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
+func TestAllNamespacesRequestsDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"all",
+					"verb":"get",
+					"version":"v1",
+					"resource":"secrets",
+					"name":"important-creds"
+				},
+				"user":"not-admin",
+				"groups":["group1"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
+func TestProtectedReadAllRequestsDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"get",
+					"version":"v1",
+					"resource":"*",
+					"name":"important-creds"
+				},
+				"user":"not-admin",
+				"groups":["group1"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
+func TestProtectedWriteAllRequestsDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"delete",
+					"version":"v1",
+					"resource":"*",
+					"name":"important-creds"
+				},
+				"user":"not-admin",
+				"groups":["group1"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
+func TestProtectedAllVerbRequestsDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"*",
+					"version":"v1",
+					"resource":"secrets",
+					"name":"important-creds"
+				},
+				"user":"not-admin",
+				"groups":["group1"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
+func TestProtectedAllVerbNonSecretRequestsDenied(t *testing.T) {
+	accessTest(t, defaultAuthorizer, true,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"*",
+					"version":"v1",
+					"resource":"pods",
+					"name":"important-creds"
+				},
+				"user":"not-admin",
+				"groups":["group1"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
 func accessTest(t *testing.T, authorizer func(w http.ResponseWriter, r *http.Request), expectDenied bool, jsonData []byte) {
 	data := bytes.NewBuffer(jsonData)
 	req := httptest.NewRequest(http.MethodPost, "/authorize", data)

@@ -43,7 +43,7 @@ type SubjectAccessReviewHTTPResponse struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
-func isPrivilegedForNamespace(user string, namespace string, protectedNamespaces []string) bool {
+func isPrivilegedSystemUser(user string, protectedNamespaces []string) bool {
 
 	systemAccountRegex, _ := regexp.Compile("system:.+")
 	serviceAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
@@ -82,27 +82,34 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		defer r.Body.Close()
 
 		isPrivilegedUser := slices.Contains(additionalPrivilegedUsers, sar.Spec.User)
-		userPrivilegedForNamespace := sar.Spec.ResourceAttributes != nil && isPrivilegedForNamespace(sar.Spec.User, sar.Spec.ResourceAttributes.Namespace, protectedNamespaces)
-		isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace) // TODO: test if you can bypass with empty or all namespaces
-		isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"                                       //TODO: test if you can bypass with * or singular nouns
+		isPrivilegedSystemUser := sar.Spec.ResourceAttributes != nil && isPrivilegedSystemUser(sar.Spec.User, protectedNamespaces)
+		isProtectedNamespace := sar.Spec.ResourceAttributes != nil && slices.Contains(protectedNamespaces, sar.Spec.ResourceAttributes.Namespace)
+		isSecret := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "secrets"
 		isReadonlyVerb := sar.Spec.ResourceAttributes != nil && slices.Contains(readonlyVerbs, sar.Spec.ResourceAttributes.Verb)
+		isAllNamespaceRequest := sar.Spec.ResourceAttributes != nil && (sar.Spec.ResourceAttributes.Namespace == "" || sar.Spec.ResourceAttributes.Namespace == "all")
+		isAllResourceRequest := sar.Spec.ResourceAttributes != nil && sar.Spec.ResourceAttributes.Resource == "*"
 
 		status := new(authorizationv1.SubjectAccessReviewStatus)
 		status.Allowed = false
 		if isPrivilegedUser {
 			status.Denied = false
 			status.Allowed = opinionMode
-		} else if !userPrivilegedForNamespace && isProtectedNamespace && isSecret {
+		} else if !isPrivilegedSystemUser && isAllNamespaceRequest {
+			status.Denied = true
+			status.Reason = "Cannot make all namespace requests"
+		} else if isProtectedNamespace && !isPrivilegedSystemUser && isAllResourceRequest {
+			status.Denied = true
+			status.Reason = "Cannot make all resource requests in protected namespace"
+		} else if isProtectedNamespace && !isPrivilegedSystemUser && isSecret {
 			status.Denied = true
 			status.Reason = "Cannot access secrets in protected namespace"
-		} else if !userPrivilegedForNamespace && isProtectedNamespace && !isReadonlyVerb {
+		} else if isProtectedNamespace && !isPrivilegedSystemUser && !isReadonlyVerb {
 			status.Denied = true
 			status.Reason = "Cannot write to protected namespace"
 		} else {
 			status.Denied = false
 			status.Allowed = opinionMode
 		}
-		//todo: add status.EvaluationError handling
 
 		if !opinionMode && !status.Denied {
 			status.Reason = "Webhook doesn't give opinion, delegated to other authorizers"
