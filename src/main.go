@@ -45,11 +45,19 @@ type SubjectAccessReviewHTTPResponse struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
+var debuglist = []string{}
+
 // Returns true if user is a service account with correct privileges or a privileged internal K8s system user
 func isPrivilegedSystemUser(user string, protectedNamespaces []string) bool {
 
 	systemAccountRegex, _ := regexp.Compile("system:.+")
 	serviceAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
+	nodeAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
+
+	if(!nodeAccountRegex.MatchString(user) && !serviceAccountRegex.MatchString(user) && !slices.Contains(debuglist, user)){
+		debuglist = append(debuglist, user)
+		log.Println(user)
+	}
 
 	if user == "system:anonymous" {
 		return false
