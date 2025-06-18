@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	authorizationv1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -100,7 +100,7 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 
 		dump, dumperr := httputil.DumpRequest(r, true)
 		if dumperr != nil {
-			fmt.Println("Error dumping request:", dumperr)
+			log.Println("Error dumping request:", dumperr)
 			return
 		}
 
@@ -108,7 +108,7 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
 			jsonErrString := "JSON decoding error: " + err.Error()
-			fmt.Println(jsonErrString)
+			log.Println(jsonErrString)
 			http.Error(w, jsonErrString, http.StatusBadRequest)
 			return
 		}
@@ -138,16 +138,16 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		} else {
 			deniedLogOutput = "Allowed"
 		}
+
+		// TODO: find way to map cluster IPs from X-Forward headers to clusters
 		if logLevel >= 1 && sar.Spec.NonResourceAttributes != nil {
-			fmt.Printf("%s non-resource request from \"%s\". Reason: %s\n", deniedLogOutput, sar.Spec.User, status.Reason)
+			log.Println("[Cluster: " + r.Header.Get("X-Forwarded-For") + "] " + deniedLogOutput + " non-resource request from " + sar.Spec.User + ". Reason: " + status.Reason)
 		}
 		if logLevel >= 1 && sar.Spec.ResourceAttributes != nil {
-			fmt.Printf("%s request from \"%s\" to \"%s\" \"%s\" in namespace \"%s\". Reason: %s \n",
-				deniedLogOutput, sar.Spec.User, sar.Spec.ResourceAttributes.Verb, sar.Spec.ResourceAttributes.Resource, sar.Spec.ResourceAttributes.Namespace, status.Reason)
+			log.Println("[Cluster: " + r.Header.Get("X-Forwarded-For") + "] " + deniedLogOutput + " request from " + sar.Spec.User + " to " + sar.Spec.ResourceAttributes.Verb + " " + sar.Spec.ResourceAttributes.Resource + " in namespace " + sar.Spec.ResourceAttributes.Namespace + ". Reason: " + status.Reason)
 		}
 		if logLevel >= 2 {
-			fmt.Println("HTTP Dump:")
-			fmt.Println(string(dump))
+			log.Printf("HTTP Dump: \n%s\n", string(dump))
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -166,10 +166,10 @@ func main() {
 	additionalPrivilegedUsers := strings.Split(*additionalPrivilegedUsersCSL, ",")
 
 	http.HandleFunc("/authorize", CreateWebhookAuthorizer(protectedNamespaces, additionalPrivilegedUsers, *opinionMode, *logLevel))
-	fmt.Printf("Server started\n")
+	log.Printf("Server started\n")
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
-		fmt.Printf("error starting server: %s\n", err)
+		log.Printf("error starting server: %s\n", err)
 		os.Exit(1)
 	}
 }
