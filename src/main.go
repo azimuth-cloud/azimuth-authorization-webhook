@@ -107,9 +107,9 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		var sar SubjectAccessReviewAPI
 		err := json.NewDecoder(r.Body).Decode(&sar)
 		if err != nil {
-			errString = "JSON decoding error: " + err.Error()
-			fmt.Println(errString)
-			http.Error(w, errString, http.StatusBadRequest)
+			jsonErrString := "JSON decoding error: " + err.Error()
+			fmt.Println(jsonErrString)
+			http.Error(w, jsonErrString, http.StatusBadRequest)
 			return
 		}
 
