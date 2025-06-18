@@ -14,6 +14,6 @@ Policy:
 | Flag | Arguments |
 | --- | --- |
 | `--allow-opinion-mode` | Specifies if the webhook should give its opinion on requests which it doesn't deny. If true, will set 'allowed' to `true` in SubjectAccessReview response. Default: `false` |
-| `--additional-privileged-users` | Comma separate listed of users to be given read/write access to protected namespaces. Default: `kubernetes-admin,kube-apiserver-kubelet-client` |
+| `--additional-privileged-users` | Comma separate listed of users to be given read/write access to protected namespaces. Default: `""` |
 | `--log-level` | Verbosity of logs <br>`0`: Internal errors only. <br>`1`: Logs high level requests info. <br>`2`: Logs HTTP dumps of requests. <br>Default: `1` |
 | `--protected-namespaces` | Comma separated list of protected namespaces. Default: `kube-system,openstack-system` |

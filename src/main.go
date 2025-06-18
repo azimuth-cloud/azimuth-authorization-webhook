@@ -45,28 +45,22 @@ type SubjectAccessReviewHTTPResponse struct {
 
 var readonlyVerbs = []string{"get", "list", "watch", "proxy"}
 
-var debuglist = []string{}
-
 // Returns true if user is a service account with correct privileges or a privileged internal K8s system user
 func isPrivilegedSystemUser(user string, protectedNamespaces []string) bool {
 
-	systemAccountRegex, _ := regexp.Compile("system:.+")
+	requiredUsers := []string{"system:kube-controller-manager", "system:kube-scheduler", "kubernetes-admin", "kube-apiserver-kubelet-client"}
 	serviceAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
-	nodeAccountRegex, _ := regexp.Compile("system:serviceaccount:.+")
+	nodeAccountRegex, _ := regexp.Compile("system:node:.+")
+	bootstrapAccountRegex, _ := regexp.Compile("system:bootstrap:.+")
 
-	if(!nodeAccountRegex.MatchString(user) && !serviceAccountRegex.MatchString(user) && !slices.Contains(debuglist, user)){
-		debuglist = append(debuglist, user)
-		log.Println(user)
-	}
-
-	if user == "system:anonymous" {
-		return false
+	if slices.Contains(requiredUsers, user) {
+		return true
 	} else if serviceAccountRegex.MatchString(user) {
 		// Allows service accounts if they originate from protected namespaces
 		serviceAccountNamespace := strings.Split(user, ":")[2]
 		return slices.Contains(protectedNamespaces, serviceAccountNamespace)
-	} else if systemAccountRegex.MatchString(user) {
-		// All other system accounts allowed
+	} else if nodeAccountRegex.MatchString(user) || bootstrapAccountRegex.MatchString(user) {
+		// All node and bootstrap accounts allowed
 		return true
 	}
 
@@ -164,7 +158,7 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 }
 
 func main() {
-	var additionalPrivilegedUsersCSL = flag.String("additional-privileged-users", "kubernetes-admin,kube-apiserver-kubelet-client", "Comma separated list of users that should be allowed to write to protected namespaces, excluding 'system:*' users")
+	var additionalPrivilegedUsersCSL = flag.String("additional-privileged-users", "", "Comma separated list of users that should be allowed to write to protected namespaces, excluding 'system:*' users")
 	var protectedNamespacesCSL = flag.String("protected-namespaces", "kube-system,openstack-system", "Comma separated list of namespaces which unprivileged users will have limited permissions for")
 	var logLevel = flag.Int("log-level", 1, "Verbosity of logs. Values: [0-2]")
 	var opinionMode = flag.Bool("allow-opinion-mode", false, "Specifies if this webhook should give its opinion on requests which it doesn't deny. If true, will set 'allowed' to true in SubjectAccessReview.")

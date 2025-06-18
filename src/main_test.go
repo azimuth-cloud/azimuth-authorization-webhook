@@ -59,6 +59,52 @@ func TestNamespaceServiceAccountAllowed(t *testing.T) {
 			}`))
 }
 
+func TestNodeAccountAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"get",
+					"version":"v1",
+					"resource":"secrets",
+					"name":"important-creds"
+				},
+				"user":"system:node:my-node",
+				"groups":["system:authenticated"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
+func TestBootstrapAccountAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"get",
+					"version":"v1",
+					"resource":"secrets",
+					"name":"important-creds"
+				},
+				"user":"system:bootstrap:my-bootstrap",
+				"groups":["system:authenticated"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
 func TestCrossProtectedNamespaceServiceAccountAccessAllowed(t *testing.T) {
 	accessTest(t, defaultAuthorizer, false,
 		[]byte(
@@ -122,9 +168,8 @@ func TestInvalidJSONDenied(t *testing.T) {
 	}
 }
 
-func TestPrivilegedUserAllowed(t *testing.T) {
-	authorizer := CreateWebhookAuthorizer(defaultProtectedNamespaces, []string{"kubernetes-admin"}, false, 0)
-	accessTest(t, authorizer, false,
+func TestRequiredUserAllowed(t *testing.T) {
+	accessTest(t, defaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -138,6 +183,30 @@ func TestPrivilegedUserAllowed(t *testing.T) {
 					"name":"important-creds"
 				},
 				"user":"kubernetes-admin",
+				"groups":["system:authenticated"]
+			},
+			"status":{
+				"allowed":false
+			}
+			}`))
+}
+
+func TestAdditionalPrivilegedUserAllowed(t *testing.T) {
+	authorizer := CreateWebhookAuthorizer(defaultProtectedNamespaces, []string{"special-user"}, false, 0)
+	accessTest(t, authorizer, false,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"get",
+					"version":"v1",
+					"resource":"secrets",
+					"name":"important-creds"
+				},
+				"user":"special-user",
 				"groups":["system:authenticated"]
 			},
 			"status":{

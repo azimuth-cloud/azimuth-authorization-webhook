@@ -5,9 +5,7 @@ logLevel: 1
 protectedNamespaces:
   - kube-system
   - openstack-system
-additionalPrivilegedUsers:
-  - kubernetes-admin
-  - kube-apiserver-kubelet-client
+additionalPrivilegedUsers: []
 allowOpinionMode: false
 
 ingress:
