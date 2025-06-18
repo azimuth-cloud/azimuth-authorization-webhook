@@ -19,6 +19,8 @@ jobs:
         run: |
           cd src
           if [[ $(gofmt -l .) ]]; then
+              echo "Files not gofmt compliant:"
+              gofmt -l .
               exit 1
           else
               exit 0
