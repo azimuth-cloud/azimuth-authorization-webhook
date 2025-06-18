@@ -381,7 +381,9 @@ func accessTest(t *testing.T, authorizer func(w http.ResponseWriter, r *http.Req
 	req := httptest.NewRequest(http.MethodPost, "/authorize", data)
 	req.Header.Set("Content-Type", "application/json")
 	resp := httptest.NewRecorder()
+
 	authorizer(resp, req)
+	
 	var sarResponse SubjectAccessReviewHTTPResponse
 	_ = json.NewDecoder(resp.Body).Decode(&sarResponse)
 	if sarResponse.Status.Denied != expectDenied {
