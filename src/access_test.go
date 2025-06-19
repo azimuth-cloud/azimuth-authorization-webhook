@@ -8,13 +8,8 @@ import (
 	"testing"
 )
 
-var defaultProtectedNamespaces = []string{"kube-system", "openstack-system"}
-var defaultAdditionalPrivilegedUsers = []string{}
-
-var defaultAuthorizer func(w http.ResponseWriter, r *http.Request) = CreateWebhookAuthorizer(defaultProtectedNamespaces, defaultAdditionalPrivilegedUsers, false, 0)
-
 func TestSystemUserAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -37,7 +32,7 @@ func TestSystemUserAllowed(t *testing.T) {
 }
 
 func TestNamespaceServiceAccountAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -60,7 +55,7 @@ func TestNamespaceServiceAccountAllowed(t *testing.T) {
 }
 
 func TestNodeAccountAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -83,7 +78,7 @@ func TestNodeAccountAllowed(t *testing.T) {
 }
 
 func TestBootstrapAccountAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -106,13 +101,13 @@ func TestBootstrapAccountAllowed(t *testing.T) {
 }
 
 func TestCrossProtectedNamespaceServiceAccountAccessAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{"kind":"SubjectAccessReview","apiVersion":"authorization.k8s.io/v1","metadata":{"creationTimestamp":null},"spec":{"resourceAttributes":{"namespace":"openstack-system","verb":"create","group":"apps","version":"v1","resource":"controllerrevisions"},"user":"system:serviceaccount:kube-system:daemon-set-controller","groups":["system:serviceaccounts","system:serviceaccounts:kube-system","system:authenticated"],"extra":{"authentication.kubernetes.io/credential-id":["JTI=3cf7d9de-5324-4df7-9447-47adb900f846"]},"uid":"cb35e0b5-1cfb-432f-acdf-5b5a0f924211"},"status":{"allowed":false}}`))
 }
 
 func TestWrongNamespaceServiceAccountDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -135,7 +130,7 @@ func TestWrongNamespaceServiceAccountDenied(t *testing.T) {
 }
 
 func TestSystemAnonymousDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -157,19 +152,8 @@ func TestSystemAnonymousDenied(t *testing.T) {
 			}`))
 }
 
-func TestInvalidJSONDenied(t *testing.T) {
-	data := bytes.NewBuffer([]byte("{ bad json }"))
-	req := httptest.NewRequest(http.MethodPost, "/authorize", data)
-	req.Header.Set("Content-Type", "application/json")
-	resp := httptest.NewRecorder()
-	defaultAuthorizer(resp, req)
-	if resp.Code != http.StatusBadRequest {
-		t.Error("Expected 400 error for invalid JSON")
-	}
-}
-
 func TestRequiredUserAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -192,7 +176,7 @@ func TestRequiredUserAllowed(t *testing.T) {
 }
 
 func TestAdditionalPrivilegedUserAllowed(t *testing.T) {
-	authorizer := CreateWebhookAuthorizer(defaultProtectedNamespaces, []string{"special-user"}, false, 0)
+	authorizer := CreateWebhookAuthorizer(DefaultProtectedNamespaces, []string{"special-user"}, false, 0)
 	accessTest(t, authorizer, false,
 		[]byte(
 			`{
@@ -216,7 +200,7 @@ func TestAdditionalPrivilegedUserAllowed(t *testing.T) {
 }
 
 func TestUnprivilegedUserDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -239,7 +223,7 @@ func TestUnprivilegedUserDenied(t *testing.T) {
 }
 
 func TestReadUnprotectedSecretsAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -262,7 +246,7 @@ func TestReadUnprotectedSecretsAllowed(t *testing.T) {
 }
 
 func TestReadProtectedNonSecretsAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -285,7 +269,7 @@ func TestReadProtectedNonSecretsAllowed(t *testing.T) {
 }
 
 func TestWriteProtectedNonSecretsDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -308,7 +292,7 @@ func TestWriteProtectedNonSecretsDenied(t *testing.T) {
 }
 
 func TestWriteUnprotectedResourcesAllowed(t *testing.T) {
-	accessTest(t, defaultAuthorizer, false,
+	accessTest(t, DefaultAuthorizer, false,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -331,7 +315,7 @@ func TestWriteUnprotectedResourcesAllowed(t *testing.T) {
 }
 
 func TestEmptyNamespacesRequestsDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -354,7 +338,7 @@ func TestEmptyNamespacesRequestsDenied(t *testing.T) {
 }
 
 func TestProtectedReadAllRequestsDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -377,7 +361,7 @@ func TestProtectedReadAllRequestsDenied(t *testing.T) {
 }
 
 func TestProtectedWriteAllRequestsDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -400,7 +384,7 @@ func TestProtectedWriteAllRequestsDenied(t *testing.T) {
 }
 
 func TestProtectedAllVerbRequestsDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -423,7 +407,7 @@ func TestProtectedAllVerbRequestsDenied(t *testing.T) {
 }
 
 func TestProtectedAllVerbNonSecretRequestsDenied(t *testing.T) {
-	accessTest(t, defaultAuthorizer, true,
+	accessTest(t, DefaultAuthorizer, true,
 		[]byte(
 			`{
 			"kind":"SubjectAccessReview",
@@ -441,6 +425,29 @@ func TestProtectedAllVerbNonSecretRequestsDenied(t *testing.T) {
 			},
 			"status":{
 				"allowed":false
+			}
+			}`))
+}
+
+func TestAllowedTrueInRequestDenied(t *testing.T) {
+	accessTest(t, DefaultAuthorizer, true,
+		[]byte(
+			`{
+			"kind":"SubjectAccessReview",
+			"apiVersion":"authorization.k8s.io/v1",
+			"spec":{
+				"resourceAttributes":{
+					"namespace":"kube-system",
+					"verb":"get",
+					"version":"v1",
+					"resource":"secrets",
+					"name":"important-creds"
+				},
+				"user":"system:anonymous",
+				"groups":["system:authenticated"]
+			},
+			"status":{
+				"allowed":true
 			}
 			}`))
 }

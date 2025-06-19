@@ -96,6 +96,27 @@ func isRequestAuthorized(sar SubjectAccessReviewAPI, protectedNamespaces []strin
 	return authorized, denyReason
 }
 
+func inputIsSanitised(sar SubjectAccessReviewAPI, httpWriter http.ResponseWriter) bool {
+	inputError := false
+	var errString string
+	if sar.APIVersion != "authorization.k8s.io/v1" {
+		errString = sar.APIVersion + " not supported. Currently support apiVersions: 'authorization.k8s.io/v1'"
+		inputError = true
+	}
+	// Most other issues will have been caught as JSON decoding errors
+	if sar.Kind != "SubjectAccessReview" || sar.Spec.User == "" {
+		errString = "Malformed SubjectAccessReview"
+		inputError = true
+	}
+	if inputError {
+		log.Println(errString)
+		http.Error(httpWriter, errString, http.StatusBadRequest)
+		return false
+	} else {
+		return true
+	}
+}
+
 // Returns HTTP request handler to handle SubjectAccessReview API requests
 func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedUsers []string, opinionMode bool, logLevel int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +137,10 @@ func CreateWebhookAuthorizer(protectedNamespaces []string, additionalPrivilegedU
 		}
 
 		defer r.Body.Close()
+
+		if !inputIsSanitised(sar, w) {
+			return
+		}
 
 		authorized, denyReason := isRequestAuthorized(sar, protectedNamespaces, additionalPrivilegedUsers)
 
