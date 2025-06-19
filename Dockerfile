@@ -1,4 +1,4 @@
-FROM golang:1.24
+FROM golang:1.24 AS build-stage
 
 WORKDIR /app
 
@@ -8,6 +8,12 @@ RUN go mod download
 COPY src/*.go ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /azimuth-authorization-webhook
+
+FROM gcr.io/distroless/base-debian11 AS build-release-stage
+
+WORKDIR /
+
+COPY --from=build-stage /azimuth-authorization-webhook /azimuth-authorization-webhook
 
 EXPOSE 8080
 
