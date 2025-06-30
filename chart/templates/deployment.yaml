@@ -23,7 +23,7 @@ spec:
               containerPort: 8080
               protocol: TCP
           args:
+          - --additional-privileged-users={{ join "," .Values.additionalPrivilegedUsers }}
           - --log-level={{ .Values.logLevel }}
           - --protected-namespaces={{ join "," .Values.protectedNamespaces }}
-          - --unpriveleged-group={{ .Values.unprivilegedGroup }}
           - --allow-opinion-mode={{ .Values.allowOpinionMode }}
